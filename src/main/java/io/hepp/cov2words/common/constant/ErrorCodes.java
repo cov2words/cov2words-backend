@@ -52,6 +52,7 @@ public final class ErrorCodes {
     public static final class WordError {
         private static final int OFFSET = 3000;
         public static final int INVALID_WORD_ORDER = OFFSET + 1;
+        public static final int UNKNOWN_WORD_INDEX = OFFSET + 2;
 
         /**
          * Private constructor to avoid accidental creation of an instance.

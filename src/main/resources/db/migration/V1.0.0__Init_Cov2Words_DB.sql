@@ -32,7 +32,7 @@ CREATE TABLE answers
   date_created      DATETIME(3) NOT NULL,
   date_invalidated  DATETIME(3),
   answer            TEXT NOT NULL,
-  source            VARCHAR(32) NOT NULL,
+  source            VARCHAR(32),
   PRIMARY KEY (id)
 );
 -- Create answer-word table

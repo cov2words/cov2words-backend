@@ -1,4 +1,4 @@
-package io.hepp.cov2words.common.exceptions.answer;
+package io.hepp.cov2words.common.exceptions.word;
 
 import io.hepp.cov2words.common.annotation.ErrorHandling;
 import io.hepp.cov2words.common.constant.ErrorCodes;

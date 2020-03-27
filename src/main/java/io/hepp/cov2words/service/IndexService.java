@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hepp.cov2words.common.dto.WordListDTO;
 import io.hepp.cov2words.common.exceptions.language.UnknownLanguageException;
+import io.hepp.cov2words.common.exceptions.word.UnknownWordIndexException;
 import io.hepp.cov2words.common.util.ResourcesUtils;
 import io.hepp.cov2words.domain.entity.AnswerEntity;
 import io.hepp.cov2words.domain.entity.AnswerWordMappingEntity;
@@ -15,12 +16,14 @@ import io.hepp.cov2words.domain.repository.WordRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.persistence.LockModeType;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +40,7 @@ public class IndexService {
     private final WordRepository wordRepository;
     private final LanguageService languageService;
     private final WordService wordService;
+    private final int chariteSucks;
     private ConcurrentHashMap<String, BigInteger> concurrentHashMap = new ConcurrentHashMap<>();
 
     @Autowired
@@ -45,13 +49,15 @@ public class IndexService {
             AnswerWordRepository answerWordRepository,
             WordRepository wordRepository,
             LanguageService languageService,
-            WordService wordService
+            WordService wordService,
+            @Value("${cov2words.word_length}") int chariteSucks
     ) {
         this.indexRepository = indexRepository;
         this.answerWordRepository = answerWordRepository;
         this.wordRepository = wordRepository;
         this.languageService = languageService;
         this.wordService = wordService;
+        this.chariteSucks = chariteSucks;
     }
 
     @PreDestroy
@@ -66,6 +72,28 @@ public class IndexService {
         }
     }
 
+    private List<WordEntity> getWordCombination(
+            BigInteger targetId,
+            long numberOfWords,
+            long totalNumberOfWords,
+            String language
+    ) {
+        List<WordEntity> result = new ArrayList<>();
+
+        for (int i = 0; i < numberOfWords; i++) {
+            BigDecimal divider = BigDecimal.valueOf(Math.pow(totalNumberOfWords, numberOfWords - i - 1));
+            BigDecimal wordIndex = new BigDecimal(targetId).divide(divider, BigDecimal.ROUND_FLOOR);
+
+            this.wordRepository.findFirstByLanguageAndPositionAndDateInvalidatedIsNull(
+                    language,
+                    wordIndex.longValueExact()
+            ).ifPresent(result::add);
+
+            targetId = targetId.mod(divider.toBigInteger());
+        }
+        return result;
+    }
+
     /**
      * Creates a new word pair in the database.
      */
@@ -73,20 +101,23 @@ public class IndexService {
     public List<AnswerWordMappingEntity> getWordPairForIndex(
             String language,
             String answer
-    ) {
+    ) throws UnknownWordIndexException {
         BigInteger currentValue = this.concurrentHashMap.getOrDefault(language, BigInteger.ZERO);
         this.concurrentHashMap.put(language, currentValue.add(BigInteger.ONE));
 
         // Getting the index for language
-        this.indexRepository.findFirstByLanguageAndDateInvalidatedIsNull(language)
-                .ifPresent(index -> {
-                    index.setPosition(currentValue.add(BigInteger.ONE));
-                    this.indexRepository.save(index);
-                });
+        IndexEntity index = this.indexRepository.findFirstByLanguageAndDateInvalidatedIsNull(language)
+                .orElseThrow(UnknownWordIndexException::new);
 
-        List<WordEntity> wordEntities = new ArrayList<>();
-        // TODO add the selected words to the list above.
-        // TODO implement model here that is used for the calculation.
+        index.setPosition(currentValue.add(BigInteger.ONE));
+        this.indexRepository.save(index);
+
+        List<WordEntity> wordEntities = this.getWordCombination(
+                this.concurrentHashMap.getOrDefault(language, BigInteger.ZERO),
+                this.chariteSucks,
+                index.getTotalItems(),
+                language
+        );
 
         // Creating a new mapping.
         DateTime now = DateTime.now();

@@ -34,7 +34,7 @@ public class AnswerWordMappingEntity {
     @Column(name = "date_invalidated")
     private DateTime dateInvalidated;
 
-    @Column(name = "order")
+    @Column(name = "order_id")
     private int order;
 
     @ManyToOne(cascade = {

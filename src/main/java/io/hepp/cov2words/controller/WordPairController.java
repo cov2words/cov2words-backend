@@ -3,9 +3,10 @@ package io.hepp.cov2words.controller;
 import io.hepp.cov2words.common.constant.Paths;
 import io.hepp.cov2words.common.dto.*;
 import io.hepp.cov2words.common.exceptions.answer.InvalidAnswerException;
-import io.hepp.cov2words.common.exceptions.answer.InvalidWordOrderException;
 import io.hepp.cov2words.common.exceptions.answer.NoAnswerForWordPairException;
 import io.hepp.cov2words.common.exceptions.language.UnknownLanguageException;
+import io.hepp.cov2words.common.exceptions.word.InvalidWordOrderException;
+import io.hepp.cov2words.common.exceptions.word.UnknownWordIndexException;
 import io.hepp.cov2words.service.LanguageService;
 import io.hepp.cov2words.service.PairService;
 import io.hepp.cov2words.service.WordService;
@@ -55,7 +56,10 @@ public class WordPairController {
     @Timed(value = "word.pair.create", description = "Gets or creates a new pair for a answers & language.")
     public WrappedResponseDTO<WordPairResponseDTO> getOrCreateWordPair(
             @RequestBody WordPairRequestDTO request
-    ) throws UnknownLanguageException, InvalidAnswerException {
+    ) throws
+            UnknownLanguageException,
+            InvalidAnswerException,
+            UnknownWordIndexException {
         log.debug("Receiving request for generating a word pair: {}", request.toString());
         return WrappedResponseDTO.fromData(this.pairService.getOrCreatePair(request));
     }
@@ -76,7 +80,7 @@ public class WordPairController {
             NoAnswerForWordPairException,
             InvalidWordOrderException,
             UnknownLanguageException {
-        log.debug("Receiving request for getting an answer from a word pair: {}", request.toString());
+        log.info("Receiving request for getting an answer from a word pair: {}", request.toString());
         return WrappedResponseDTO.fromData(this.pairService.getAnswer(request));
     }
 

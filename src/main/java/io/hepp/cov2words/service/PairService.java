@@ -4,9 +4,10 @@ import io.hepp.cov2words.common.dto.AnswerRequestDTO;
 import io.hepp.cov2words.common.dto.WordPairRequestDTO;
 import io.hepp.cov2words.common.dto.WordPairResponseDTO;
 import io.hepp.cov2words.common.exceptions.answer.InvalidAnswerException;
-import io.hepp.cov2words.common.exceptions.answer.InvalidWordOrderException;
 import io.hepp.cov2words.common.exceptions.answer.NoAnswerForWordPairException;
 import io.hepp.cov2words.common.exceptions.language.UnknownLanguageException;
+import io.hepp.cov2words.common.exceptions.word.InvalidWordOrderException;
+import io.hepp.cov2words.common.exceptions.word.UnknownWordIndexException;
 import io.hepp.cov2words.domain.entity.AnswerEntity;
 import io.hepp.cov2words.domain.entity.AnswerWordMappingEntity;
 import io.hepp.cov2words.domain.repository.AnswerRepository;
@@ -86,7 +87,13 @@ public class PairService {
 
             for (Map.Entry<AnswerEntity, List<AnswerWordMappingEntity>> entry : mapping.entrySet()) {
                 AnswerEntity answer = entry.getKey();
-                if (this.compareOrder(request.getWords(), entry.getValue())) {
+
+                List<AnswerWordMappingEntity> entities = entry.getValue();
+
+                if (entities.size() <= 1) {
+                    continue;
+                }
+                if (this.compareOrder(request.getWords(), entities)) {
                     log.info("Found corresponding answer: {}", answer);
                     return new WordPairResponseDTO(
                             answer.getAnswer(),
@@ -117,7 +124,7 @@ public class PairService {
 
             if (!inputWord.isPresent() || !referenceWord.isPresent()) {
                 return false;
-            } else if (inputWord.get().getWord().equals(referenceWord.get().getWord().getWord())) {
+            } else if (!inputWord.get().getWord().equals(referenceWord.get().getWord().getWord())) {
                 return false;
             }
         }
@@ -152,7 +159,7 @@ public class PairService {
      * Get or creates a word pair for an answer.
      */
     public WordPairResponseDTO getOrCreatePair(WordPairRequestDTO request) throws
-            UnknownLanguageException, InvalidAnswerException {
+            UnknownLanguageException, InvalidAnswerException, UnknownWordIndexException {
         log.info("Get or create word pair for {}", request);
 
         this.languageService.validateLanguage(request.getLanguage());
@@ -181,7 +188,7 @@ public class PairService {
         }
     }
 
-    private List<AnswerWordMappingEntity> createWordPair(WordPairRequestDTO request) {
+    private List<AnswerWordMappingEntity> createWordPair(WordPairRequestDTO request) throws UnknownWordIndexException {
         return this.indexService.getWordPairForIndex(
                 request.getLanguage(),
                 request.getAnswer()
