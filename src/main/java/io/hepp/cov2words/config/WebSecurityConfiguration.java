@@ -22,7 +22,6 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     private final String[] authRoles;
 
     @Autowired
-    // TODO add application properties for user roles
     public WebSecurityConfiguration(@Value("${spring.security.user.roles}") String[] authRoles) {
         this.authRoles = authRoles;
     }
