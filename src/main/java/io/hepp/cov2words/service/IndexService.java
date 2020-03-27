@@ -5,8 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hepp.cov2words.common.dto.WordListDTO;
 import io.hepp.cov2words.common.exceptions.language.UnknownLanguageException;
 import io.hepp.cov2words.common.util.ResourcesUtils;
+import io.hepp.cov2words.domain.entity.AnswerEntity;
+import io.hepp.cov2words.domain.entity.AnswerWordMappingEntity;
 import io.hepp.cov2words.domain.entity.IndexEntity;
+import io.hepp.cov2words.domain.entity.WordEntity;
+import io.hepp.cov2words.domain.repository.AnswerWordRepository;
 import io.hepp.cov2words.domain.repository.IndexRepository;
+import io.hepp.cov2words.domain.repository.WordRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -24,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class IndexService {
     private final static String WORDLIST_FILE_PATTERN = "wordlist/%s.json";
     private final IndexRepository indexRepository;
+    private final AnswerWordRepository answerWordRepository;
+    private final WordRepository wordRepository;
     private final LanguageService languageService;
     private final WordService wordService;
     private ConcurrentHashMap<String, BigInteger> concurrentHashMap = new ConcurrentHashMap<>();
@@ -31,12 +36,59 @@ public class IndexService {
     @Autowired
     public IndexService(
             IndexRepository indexRepository,
+            AnswerWordRepository answerWordRepository,
+            WordRepository wordRepository,
             LanguageService languageService,
             WordService wordService
     ) {
         this.indexRepository = indexRepository;
+        this.answerWordRepository = answerWordRepository;
+        this.wordRepository = wordRepository;
         this.languageService = languageService;
         this.wordService = wordService;
+    }
+
+    /**
+     * Creates a new word pair in the database.
+     */
+    public List<AnswerWordMappingEntity> getWordPairForIndex(
+            String language,
+            String answer
+    ) {
+        BigInteger currentValue = this.concurrentHashMap.getOrDefault(language, BigInteger.ZERO);
+        this.concurrentHashMap.put(language, currentValue.add(BigInteger.ONE));
+
+        List<WordEntity> wordEntities = new ArrayList<>();
+        // TODO add the selected words to the list above.
+        // TODO implement model here that is used for the calculation.
+
+        // Creating a new mapping.
+        DateTime now = DateTime.now();
+        AnswerEntity answerEntity = new AnswerEntity(
+                UUID.randomUUID(),
+                now,
+                now,
+                null,
+                answer,
+                null
+        );
+
+        List<AnswerWordMappingEntity> result = new ArrayList<>();
+        for (int i = 0; i < wordEntities.size(); i++) {
+            result.add(
+                    new AnswerWordMappingEntity(
+                            UUID.randomUUID(),
+                            now,
+                            now,
+                            null,
+                            i,
+                            wordEntities.get(i),
+                            answerEntity
+                    )
+            );
+        }
+
+        return this.answerWordRepository.saveAll(result);
     }
 
     /**
@@ -84,7 +136,10 @@ public class IndexService {
     }
 
     private IndexEntity importWordsForLanguage(String language) throws JsonProcessingException, UnknownLanguageException {
+        log.info("Importing words for language: {}", language);
         // Loading the file from resources.
+        this.wordRepository.deleteAllByLanguage(language);
+
         String resource = ResourcesUtils.getResourceFileAsString(String.format(WORDLIST_FILE_PATTERN, language));
         WordListDTO wordList = this.getWordListDTO(resource);
 

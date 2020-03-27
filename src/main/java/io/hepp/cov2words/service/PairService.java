@@ -32,16 +32,19 @@ public class PairService {
     private final AnswerWordRepository answerWordRepository;
     private final AnswerRepository answerRepository;
     private final LanguageService languageService;
+    private final IndexService indexService;
 
     @Autowired
     public PairService(
             AnswerWordRepository answerWordRepository,
             AnswerRepository answerRepository,
-            LanguageService languageService
+            LanguageService languageService,
+            IndexService indexService
     ) {
         this.answerWordRepository = answerWordRepository;
         this.answerRepository = answerRepository;
         this.languageService = languageService;
+        this.indexService = indexService;
     }
 
     public void validateOrder(List<WordPairResponseDTO.WordDTO> words) throws InvalidWordOrderException {
@@ -179,9 +182,10 @@ public class PairService {
     }
 
     private List<AnswerWordMappingEntity> createWordPair(WordPairRequestDTO request) {
-        // TODO magic happens here
-
-        return new ArrayList<>();
+        return this.indexService.getWordPairForIndex(
+                request.getLanguage(),
+                request.getAnswer()
+        );
     }
 
     private List<WordPairResponseDTO.WordDTO> getWords(List<AnswerWordMappingEntity> mapping) {

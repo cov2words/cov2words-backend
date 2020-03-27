@@ -1,7 +1,7 @@
 package io.hepp.cov2words.domain.repository;
 
 import io.hepp.cov2words.domain.entity.WordEntity;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.UUID;
  * @author Thomas Hepp, thomas@hepp.io
  */
 @Repository
-public interface WordRepository extends CrudRepository<WordEntity, UUID> {
+public interface WordRepository extends JpaRepository<WordEntity, UUID> {
     /**
      * Returns all words for a certain language.
      */
