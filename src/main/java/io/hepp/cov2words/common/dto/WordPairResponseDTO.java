@@ -37,10 +37,10 @@ public class WordPairResponseDTO implements Serializable {
     private String language;
 
     /**
-     * Contains the word pair / combination for an answer of the questionaire.
+     * Contains the word pair / combination for an answer of the questionnaire.
      */
     @JsonProperty(value = "words")
-    @ApiModelProperty(value = "Contains the word pair / combination for an answer of the questionaire.")
+    @ApiModelProperty(value = "Contains the word pair / combination for an answer of the questionnaire.")
     private List<WordDTO> words;
 
     @NoArgsConstructor

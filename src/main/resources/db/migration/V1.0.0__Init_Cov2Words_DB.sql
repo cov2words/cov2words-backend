@@ -1,4 +1,4 @@
--- TODO Add database generation script for all tables
+-- Database generation script for all tables.
 CREATE TABLE word_index
 (
   id                BINARY(16)  NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE word_index
   PRIMARY KEY (id)
 );
 
--- TODO CREATE WORD table
+-- Create table that contains the signal words for combination.
 CREATE TABLE words
 (
   id                BINARY(16)  NOT NULL,
@@ -23,13 +23,27 @@ CREATE TABLE words
   position          BIGINT,
   PRIMARY KEY (id)
 );
--- TODO Create answer table
--- TODO create answer-word table
 
--- TODO Create indexes for all columns in WHERE, ORDER BY, GROUP BY conditions
+-- Create answer table that contains the raw data answers from the questionnaire.
+CREATE TABLE answers
+(
+  id                BINARY(16)  NOT NULL,
+  date_modified     DATETIME(3) NOT NULL,
+  date_created      DATETIME(3) NOT NULL,
+  date_invalidated  DATETIME(3),
+  answer            TEXT NOT NULL,
+  source            VARCHAR(32) NOT NULL,
+  PRIMARY KEY (id)
+);
+-- TODO create answer-word table (Foreign keys necessary)
+
+-- Create indexes for all columns in WHERE, ORDER BY, GROUP BY conditions (performance)
 CREATE INDEX idx_word_index_language ON word_index (language);
 CREATE INDEX idx_word_index_date_invalidated ON word_index (date_invalidated);
 
 CREATE INDEX idx_words_language ON words (language);
 CREATE INDEX idx_words_position ON words (position);
 CREATE INDEX idx_words_date_invalidated ON words (date_invalidated);
+
+CREATE INDEX idx_answers_answer ON answers (answer);
+CREATE INDEX idx_answers_date_invalidated ON answers (date_invalidated);
