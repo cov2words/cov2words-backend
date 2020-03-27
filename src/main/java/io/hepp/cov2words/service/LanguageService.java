@@ -24,9 +24,7 @@ public class LanguageService {
     private final List<String> languages;
 
     @Autowired
-    public LanguageService(
-            @Value("${cov2words.languages}") List<String> languages
-    ) {
+    public LanguageService(@Value("${cov2words.languages}") List<String> languages) {
         this.languages = languages;
     }
 

@@ -42,7 +42,7 @@ CREATE TABLE answers_words_mapping
   date_modified     DATETIME(3) NOT NULL,
   date_created      DATETIME(3) NOT NULL,
   date_invalidated  DATETIME(3),
-  order             INTEGER,
+  order_id          INTEGER,
   word_id           BINARY(16) NOT NULL,
   answer_id         BINARY(16) NOT NULL,
   PRIMARY KEY (id),
@@ -58,18 +58,14 @@ CREATE TABLE answers_words_mapping
     REFERENCES answers (id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
-);
 
 -- Create indexes for all columns in WHERE, ORDER BY, GROUP BY conditions (performance)
 CREATE INDEX idx_word_index_language ON word_index (language);
 CREATE INDEX idx_word_index_date_invalidated ON word_index (date_invalidated);
-
 CREATE INDEX idx_words_language ON words (language);
 CREATE INDEX idx_words_position ON words (position);
 CREATE INDEX idx_words_date_invalidated ON words (date_invalidated);
-
-CREATE INDEX idx_answers_answer ON answers (answer);
+CREATE INDEX idx_answers_answer ON answers (answer(512));
 CREATE INDEX idx_answers_date_invalidated ON answers (date_invalidated);
-
 CREATE INDEX idx_mapping_date_invalidated ON answers_words_mapping (date_invalidated);
-CREATE INDEX idx_mapping_order ON answers_words_mapping (order);
+CREATE INDEX idx_mapping_order ON answers_words_mapping (order_id);

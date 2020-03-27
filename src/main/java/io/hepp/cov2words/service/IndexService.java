@@ -25,10 +25,13 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * @author Thomas Hepp, thomas@hepp.io
+ */
 @Service
 @Slf4j(topic = "IndexService")
 public class IndexService {
-    private final static String WORDLIST_FILE_PATTERN = "wordlist/%s.json";
+    private final static String WORDLIST_FILE_PATTERN = "wordlists/%s.json";
     private final IndexRepository indexRepository;
     private final AnswerWordRepository answerWordRepository;
     private final WordRepository wordRepository;
@@ -164,6 +167,8 @@ public class IndexService {
         this.wordRepository.deleteAllByLanguage(language);
 
         String resource = ResourcesUtils.getResourceFileAsString(String.format(WORDLIST_FILE_PATTERN, language));
+
+
         WordListDTO wordList = this.getWordListDTO(resource);
 
         this.wordService.importWordsForLanguage(

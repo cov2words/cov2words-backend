@@ -1,6 +1,7 @@
 package io.hepp.cov2words.domain.entity;
 
 import lombok.*;
+import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
 
 import javax.persistence.Column;
@@ -26,13 +27,16 @@ public class IndexEntity {
     @Column(name = "id", nullable = false, unique = true, columnDefinition = "BINARY(16)")
     private UUID id;
 
+    @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     @Column(name = "date_created")
     private DateTime dateCreated;
 
     @Column(name = "date_modified")
+    @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     private DateTime dateModified;
 
     @Column(name = "date_invalidated")
+    @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     private DateTime dateInvalidated;
 
     @Column(name = "position")
