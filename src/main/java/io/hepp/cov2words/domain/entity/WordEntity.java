@@ -42,5 +42,5 @@ public class WordEntity implements Serializable {
     private String language;
 
     @Column(name = "position")
-    private int position;
+    private long position;
 }
