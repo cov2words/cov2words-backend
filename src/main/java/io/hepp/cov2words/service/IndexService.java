@@ -15,9 +15,12 @@ import io.hepp.cov2words.domain.repository.WordRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.persistence.LockModeType;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,15 +51,35 @@ public class IndexService {
         this.wordService = wordService;
     }
 
+    @PreDestroy
+    public void destroyBean() {
+        log.info("Saving the index to DB before closing the API");
+        for (Map.Entry<String, BigInteger> entry : this.concurrentHashMap.entrySet()) {
+            this.indexRepository.findFirstByLanguageAndDateInvalidatedIsNull(entry.getKey())
+                    .ifPresent(index -> {
+                        index.setPosition(entry.getValue());
+                        this.indexRepository.save(index);
+                    });
+        }
+    }
+
     /**
      * Creates a new word pair in the database.
      */
+    @Lock(LockModeType.PESSIMISTIC_READ)
     public List<AnswerWordMappingEntity> getWordPairForIndex(
             String language,
             String answer
     ) {
         BigInteger currentValue = this.concurrentHashMap.getOrDefault(language, BigInteger.ZERO);
         this.concurrentHashMap.put(language, currentValue.add(BigInteger.ONE));
+
+        // Getting the index for language
+        this.indexRepository.findFirstByLanguageAndDateInvalidatedIsNull(language)
+                .ifPresent(index -> {
+                    index.setPosition(currentValue.add(BigInteger.ONE));
+                    this.indexRepository.save(index);
+                });
 
         List<WordEntity> wordEntities = new ArrayList<>();
         // TODO add the selected words to the list above.
