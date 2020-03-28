@@ -20,6 +20,11 @@
 - `cov2words.languages`: comma separated list.
 - `cov2words.word_length`: Determines the amount of words that are used for word pair generation.
 
+## Deployment
+Make sure you set the following environment variables before deploying.
+- LETSENCRYPT_DOMAIN
+- LETSENCRYPT_EMAIL
+
 ## Add new language
 
 - Generate a file similar to `src/main/resources/wordlists/de.json`. Note that the file name is a 2 digit country code.

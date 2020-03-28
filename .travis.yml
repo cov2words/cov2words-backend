@@ -26,6 +26,10 @@ before_deploy:
   - if [ -d "deployment" ]; then rm -Rf deployment; fi
   # create directory which contains the builds files
   - mkdir deployment
+  # copy extension / nginx config
+  - cp -R /home/travis/build/thhepp/cov2words-backend/src/main/resources/.ebextensions deployment/
+  # copy the Procfile to the deployment directory
+  - cp ../src/main/resources/Procfile deployment/Procfile
   # collect the jar
   - cp cov2words-1.0-SNAPSHOT.jar deployment/cov2words-1.0-SNAPSHOT.jar
   # finally zip the deployment folder
