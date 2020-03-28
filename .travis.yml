@@ -1,0 +1,46 @@
+language: java
+addons:
+  mariadb: '10.2'
+jdk:
+  - openjdk8
+
+branches:
+  only:
+    - master
+
+# create our own database test user should be: travis:""
+before_install:
+  - echo 'Prepare MySQL database'
+  - mysql -e 'CREATE DATABASE test;'
+
+install:
+  - echo 'Skip install phase'
+
+script:
+  - mvn -f pom.xml -U -Dspring.profiles.active=travis clean install
+
+before_deploy:
+  # before we deploy the created jar, all files (e.g. Procfile / cron.yaml, config files) are collected within one directory. After the collection, the directory is simply zipped.
+  - cd /home/travis/build/thhepp/cov2word-backend/target
+  # delete deployment folder if exists
+  - if [ -d "deployment" ]; then rm -Rf deployment; fi
+  # create directory which contains the builds files
+  - mkdir deployment
+  # collect the jar
+  - cp cov2words-1.0-SNAPSHOT.jar deployment/cov2words-1.0-SNAPSHOT.jar
+  # finally zip the deployment folder
+  - cd deployment
+  - zip -r api-${TRAVIS_BUILD_NUMBER}.zip .
+
+deploy:
+  - provider: elasticbeanstalk
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key: $AWS_SECRET_KEY
+    region: $AWS_REGION
+    skip_cleanup: true
+    zip_file: /home/travis/build/thhepp/cov2words-backend/target/deployment/api-${TRAVIS_BUILD_NUMBER}.zip
+    app: $AWS_APP
+    env: $AWS_ENVIRONMENT
+    bucket_name: $AWS_BUCKET
+    on:
+      branch: master
