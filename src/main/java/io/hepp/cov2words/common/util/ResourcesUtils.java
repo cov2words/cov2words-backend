@@ -1,9 +1,13 @@
 package io.hepp.cov2words.common.util;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.ResourceUtils;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.stream.Collectors;
 
 /**
@@ -17,9 +21,10 @@ public class ResourcesUtils {
         InputStream is = null;
         try {
             is = getResourceFileAsInputStream(fileName);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            log.error("An unexpected error occurred", e);
         }
+
         if (is != null) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             return (String) reader.lines().collect(Collectors.joining(System.lineSeparator()));
@@ -28,9 +33,11 @@ public class ResourcesUtils {
         }
     }
 
-    public static InputStream getResourceFileAsInputStream(String fileName) throws FileNotFoundException {
-        File file = ResourceUtils.getFile("classpath:" + fileName);
-        log.info("File exists: {}", file.exists());
-        return new FileInputStream(file);
+    public static InputStream getResourceFileAsInputStream(String fileName) throws IOException {
+        return getResourceFile(fileName).getInputStream();
+    }
+
+    public static Resource getResourceFile(String file) {
+        return new ClassPathResource(file);
     }
 }
