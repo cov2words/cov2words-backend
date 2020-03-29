@@ -15,6 +15,6 @@ import java.util.List;
 @Setter
 @ToString
 public class WordListDTO implements Serializable {
-    @JsonProperty(value = "terms")
+    @JsonProperty(value = "term")
     private List<String> terms;
 }
