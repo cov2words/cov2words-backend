@@ -20,10 +20,15 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final String[] authRoles;
+    private final boolean endpointSecured;
 
     @Autowired
-    public WebSecurityConfiguration(@Value("${spring.security.user.roles}") String[] authRoles) {
+    public WebSecurityConfiguration(
+            @Value("${spring.security.user.roles}") String[] authRoles,
+            @Value("${cov2words.endpoint.auth}") boolean endpointSecured
+    ) {
         this.authRoles = authRoles;
+        this.endpointSecured = endpointSecured;
     }
 
     /**
@@ -31,16 +36,28 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-                //HTTP Basic authentication
-                .httpBasic()
-                .and()
-                .authorizeRequests().antMatchers("/actuator/**").hasAnyRole(authRoles)
-                .and()
-                .authorizeRequests().antMatchers(Paths.BASE_PATH + "/**").hasAnyRole(authRoles)
-                .and()
-                .authorizeRequests().anyRequest().permitAll()
-                .and()
-                .csrf().disable();
+        if (this.endpointSecured) {
+            http
+                    //HTTP Basic authentication
+                    .httpBasic()
+                    .and()
+                    .authorizeRequests().antMatchers("/actuator/**").hasAnyRole(authRoles)
+                    .and()
+                    .authorizeRequests().antMatchers(Paths.BASE_PATH + "/**").hasAnyRole(authRoles)
+                    .and()
+                    .authorizeRequests().anyRequest().permitAll()
+                    .and()
+                    .csrf().disable();
+        } else {
+            http
+                    //HTTP Basic authentication
+                    .httpBasic()
+                    .and()
+                    .authorizeRequests().antMatchers("/actuator/**").hasAnyRole(authRoles)
+                    .and()
+                    .authorizeRequests().anyRequest().permitAll()
+                    .and()
+                    .csrf().disable();
+        }
     }
 }
