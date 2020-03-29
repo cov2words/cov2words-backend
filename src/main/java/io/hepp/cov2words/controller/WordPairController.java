@@ -14,6 +14,7 @@ import io.micrometer.core.annotation.Timed;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,16 +33,19 @@ public class WordPairController {
     private final PairService pairService;
     private final LanguageService languageService;
     private final WordService wordService;
+    private final CombinationCountResponseDTO countResponseDTO;
 
     @Autowired
     public WordPairController(
             PairService pairService,
             LanguageService languageService,
-            WordService wordService
+            WordService wordService,
+            @Value("${cov2words.word_length}") int combinations
     ) {
         this.pairService = pairService;
         this.languageService = languageService;
         this.wordService = wordService;
+        this.countResponseDTO = new CombinationCountResponseDTO(combinations);
     }
 
     /**
@@ -112,5 +116,21 @@ public class WordPairController {
             @RequestBody WordRequestDTO request
     ) throws UnknownLanguageException {
         return WrappedResponseDTO.fromData(this.wordService.getWordsForLanguage(request.getLanguage()));
+    }
+
+    /**
+     * Returns the word length of a combination.
+     */
+    @RequestMapping(
+            value = Paths.PairPaths.COMBINATIONS,
+            method = RequestMethod.POST
+    )
+    @ResponseBody
+    @CrossOrigin(origins = "*")
+    @Timed(value = "word.combination.get", description = "Returns the word length of a combination.")
+    public WrappedResponseDTO<CombinationCountResponseDTO> getCombinationCounts(
+            @RequestBody WordRequestDTO request
+    ) throws UnknownLanguageException {
+        return WrappedResponseDTO.fromData(this.countResponseDTO);
     }
 }
