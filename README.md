@@ -1,6 +1,6 @@
 # cov2words-backend
 
-[![Build Status](https://travis-ci.com/thhepp/cov2words-backend.svg?branch=master)](https://travis-ci.com/thhepp/cov2words-backend)
+[![Build Status](https://travis-ci.com/cov2words/cov2words-backend.svg?branch=master)](https://travis-ci.com/cov2words/cov2words-backend)
 
 ## Prerequisites
 - IntelliJ or Eclipse
