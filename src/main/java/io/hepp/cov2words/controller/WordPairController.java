@@ -130,7 +130,7 @@ public class WordPairController {
     @Timed(value = "word.combination.get", description = "Returns the word length of a combination.")
     public WrappedResponseDTO<CombinationCountResponseDTO> getCombinationCounts(
             @RequestBody WordRequestDTO request
-    ) throws UnknownLanguageException {
+    ) {
         return WrappedResponseDTO.fromData(this.countResponseDTO);
     }
 }
