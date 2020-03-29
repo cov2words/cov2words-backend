@@ -131,6 +131,7 @@ public class WordPairController {
     public WrappedResponseDTO<CombinationCountResponseDTO> getCombinationCounts(
             @RequestBody WordRequestDTO request
     ) {
+        // TODO make language dependent
         return WrappedResponseDTO.fromData(this.countResponseDTO);
     }
 }
