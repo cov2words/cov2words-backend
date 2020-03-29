@@ -21,13 +21,13 @@ script:
 
 before_deploy:
   # before we deploy the created jar, all files (e.g. Procfile / cron.yaml, config files) are collected within one directory. After the collection, the directory is simply zipped.
-  - cd /home/travis/build/thhepp/cov2words-backend/target
+  - cd /home/travis/build/cov2words/cov2words-backend/target
   # delete deployment folder if exists
   - if [ -d "deployment" ]; then rm -Rf deployment; fi
   # create directory which contains the builds files
   - mkdir deployment
   # copy extension / nginx config
-  - cp -R /home/travis/build/thhepp/cov2words-backend/src/main/resources/.ebextensions deployment/
+  - cp -R /home/travis/build/cov2words/cov2words-backend/src/main/resources/.ebextensions deployment/
   # copy the Procfile to the deployment directory
   - cp ../src/main/resources/Procfile deployment/Procfile
   # collect the jar
@@ -42,7 +42,7 @@ deploy:
     secret_access_key: $AWS_SECRET_KEY
     region: $AWS_REGION
     skip_cleanup: true
-    zip_file: /home/travis/build/thhepp/cov2words-backend/target/deployment/api-${TRAVIS_BUILD_NUMBER}.zip
+    zip_file: /home/travis/build/cov2words/cov2words-backend/target/deployment/api-${TRAVIS_BUILD_NUMBER}.zip
     app: $AWS_APP
     env: $AWS_ENVIRONMENT
     bucket_name: $AWS_BUCKET
