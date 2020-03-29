@@ -103,7 +103,7 @@ public class WordPairController {
      */
     @RequestMapping(
             value = Paths.PairPaths.GET_WORDS,
-            method = RequestMethod.GET
+            method = RequestMethod.POST
     )
     @ResponseBody
     @CrossOrigin(origins = "*")
