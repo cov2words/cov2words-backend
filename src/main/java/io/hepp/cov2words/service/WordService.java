@@ -7,6 +7,7 @@ import io.hepp.cov2words.domain.repository.WordRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -23,14 +24,17 @@ public class WordService {
 
     private final WordRepository wordRepository;
     private final LanguageService languageService;
+    private final int combinations;
 
     @Autowired
     public WordService(
             WordRepository wordRepository,
-            LanguageService languageService
+            LanguageService languageService,
+            @Value("${cov2words.word_length}") int combinations
     ) {
         this.wordRepository = wordRepository;
         this.languageService = languageService;
+        this.combinations = combinations;
     }
 
     public void importWordsForLanguage(List<String> words, String language) throws UnknownLanguageException {
@@ -72,6 +76,7 @@ public class WordService {
         this.languageService.validateLanguage(language);
         return new WordResponseDTO(
                 language,
+                this.combinations,
                 this.wordRepository.findAllByLanguageAndDateInvalidatedIsNull(language)
                         .stream()
                         .map(WordEntity::getWord)

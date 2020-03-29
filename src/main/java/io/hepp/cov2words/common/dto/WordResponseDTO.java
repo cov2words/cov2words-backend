@@ -29,6 +29,13 @@ public class WordResponseDTO {
     private String language;
 
     /**
+     * Contains the amount of words used for a combination.
+     */
+    @ApiModelProperty(value = "Contains the amount of words used for a combination.")
+    @JsonProperty(value = "combinations")
+    private int combinations;
+
+    /**
      * List that contains the signal words.
      */
     @ApiModelProperty(value = "List that contains the signal words.")
