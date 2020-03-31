@@ -22,12 +22,16 @@ import java.util.List;
 @Setter
 @ToString
 public class WordPairResponseDTO implements Serializable {
-    /**
-     * Contains the XML answer string.
-     */
     @JsonProperty(value = "answer")
     @ApiModelProperty(value = "Contains the XML answer of the word pair.")
     private String answer;
+
+    /**
+     * Contains the XML answer string.
+     */
+    @JsonProperty(value = "answer_detail")
+    @ApiModelProperty(value = "Contains the answer information of the word pair.")
+    private AnswerDTO answerDetail;
 
     /**
      * Contains the ISO language country code.
@@ -62,5 +66,28 @@ public class WordPairResponseDTO implements Serializable {
         @JsonProperty(value = "order")
         @ApiModelProperty(value = "Indicates the order of words. Order must be preserved.")
         private int order;
+    }
+
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    @ToString
+    public static class AnswerDTO implements Serializable {
+        @JsonProperty(value = "answer")
+        @ApiModelProperty(value = "Contains the XML answer of the word pair.")
+        private String answer;
+
+        @JsonProperty(value = "source")
+        @ApiModelProperty(value = "Currently: Always null")
+        private String source = null;
+
+        @JsonProperty(value = "answer_hash")
+        @ApiModelProperty(value = "Contains the answer hash")
+        private String answerHash;
+
+        @JsonProperty(value = "is_proof_available")
+        @ApiModelProperty(value = "Indicates whether a certificate for the answer is available or not.")
+        private boolean isProofAvailable = false;
     }
 }

@@ -1,17 +1,21 @@
 package io.hepp.cov2words.service;
 
+import io.hepp.cov2words.common.constant.originstamp.TimestampStatus;
 import io.hepp.cov2words.common.dto.AnswerRequestDTO;
 import io.hepp.cov2words.common.dto.WordPairRequestDTO;
 import io.hepp.cov2words.common.dto.WordPairResponseDTO;
+import io.hepp.cov2words.common.exceptions.answer.HashNotTimestampedException;
 import io.hepp.cov2words.common.exceptions.answer.InvalidAnswerException;
 import io.hepp.cov2words.common.exceptions.answer.NoAnswerForWordPairException;
 import io.hepp.cov2words.common.exceptions.language.UnknownLanguageException;
 import io.hepp.cov2words.common.exceptions.word.InvalidWordOrderException;
 import io.hepp.cov2words.common.exceptions.word.UnknownWordIndexException;
 import io.hepp.cov2words.domain.entity.AnswerEntity;
+import io.hepp.cov2words.domain.entity.AnswerTimestampMapping;
 import io.hepp.cov2words.domain.entity.AnswerWordMappingEntity;
 import io.hepp.cov2words.domain.repository.AnswerRepository;
 import io.hepp.cov2words.domain.repository.AnswerWordRepository;
+import io.hepp.cov2words.service.originstamp.OriginStampService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +37,7 @@ public class PairService {
 
     private final AnswerWordRepository answerWordRepository;
     private final AnswerRepository answerRepository;
+    private final OriginStampService originStampService;
     private final LanguageService languageService;
     private final IndexService indexService;
 
@@ -40,11 +45,13 @@ public class PairService {
     public PairService(
             AnswerWordRepository answerWordRepository,
             AnswerRepository answerRepository,
+            OriginStampService originStampService,
             LanguageService languageService,
             IndexService indexService
     ) {
         this.answerWordRepository = answerWordRepository;
         this.answerRepository = answerRepository;
+        this.originStampService = originStampService;
         this.languageService = languageService;
         this.indexService = indexService;
     }
@@ -69,7 +76,7 @@ public class PairService {
     public WordPairResponseDTO getAnswer(AnswerRequestDTO request) throws
             UnknownLanguageException,
             NoAnswerForWordPairException,
-            InvalidWordOrderException {
+            InvalidWordOrderException, HashNotTimestampedException, NoSuchAlgorithmException {
         log.info("Checking if there is an answer for the given keywords");
         this.languageService.validateLanguage(request.getLanguage());
         this.validateOrder(request.getWords());
@@ -98,6 +105,7 @@ public class PairService {
                     log.info("Found corresponding answer: {}", answer);
                     return new WordPairResponseDTO(
                             answer.getAnswer(),
+                            this.getAnswerDetail(answer, 0),
                             request.getLanguage(),
                             this.getWords(entry.getValue())
                     );
@@ -106,6 +114,32 @@ public class PairService {
 
             // Throwing exception if no matching was found.
             throw new NoAnswerForWordPairException();
+        }
+    }
+
+    private WordPairResponseDTO.AnswerDTO getAnswerDetail(
+            AnswerEntity answerEntity,
+            int depth
+    ) throws NoSuchAlgorithmException, HashNotTimestampedException {
+        depth++;
+        Optional<AnswerTimestampMapping> timestamp = this.originStampService.getTimestampForAnswer(answerEntity);
+
+        if (timestamp.isPresent()) {
+            return new WordPairResponseDTO.AnswerDTO(
+                    answerEntity.getAnswer(),
+                    null,
+                    timestamp.get().getTimestamp().getHash(),
+                    timestamp.get().getTimestamp().getStatus() == TimestampStatus.CERTIFIED.getStatusId()
+            );
+        } else {
+            log.warn("Timestamp does not exist for answer: {}", answerEntity);
+            this.originStampService.createTimestamp(answerEntity);
+            // Restrict the maximum recursion depth.
+            if (depth == 3) {
+                throw new HashNotTimestampedException();
+            }
+            // Attention this a recursive call.
+            return this.getAnswerDetail(answerEntity, depth);
         }
     }
 
@@ -160,7 +194,11 @@ public class PairService {
      * Get or creates a word pair for an answer.
      */
     public WordPairResponseDTO getOrCreatePair(WordPairRequestDTO request) throws
-            UnknownLanguageException, InvalidAnswerException, UnknownWordIndexException, NoSuchAlgorithmException {
+            UnknownLanguageException,
+            InvalidAnswerException,
+            UnknownWordIndexException,
+            NoSuchAlgorithmException,
+            HashNotTimestampedException {
         log.info("Get or create word pair for {}", request);
 
         this.languageService.validateLanguage(request.getLanguage());
@@ -171,6 +209,7 @@ public class PairService {
             log.info("Answer already exists, returning result");
             return new WordPairResponseDTO(
                     request.getAnswer(),
+                    this.getAnswerDetail(answer.get(), 0),
                     request.getLanguage(),
                     this.getWords(
                             this.answerWordRepository.findAllByWord_LanguageAndAnswerEntity_AnswerAndDateInvalidatedIsNullOrderByOrder(
@@ -183,6 +222,13 @@ public class PairService {
             log.info("Creating a new word-pair for {}", request);
             return new WordPairResponseDTO(
                     request.getAnswer(),
+                    // Recently created, therefore just return empty information.
+                    new WordPairResponseDTO.AnswerDTO(
+                            request.getAnswer(),
+                            null,
+                            null,
+                            false
+                    ),
                     request.getLanguage(),
                     this.getWords(this.createWordPair(request))
             );

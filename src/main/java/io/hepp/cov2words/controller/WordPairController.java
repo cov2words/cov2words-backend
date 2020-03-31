@@ -80,7 +80,8 @@ public class WordPairController {
             UnknownLanguageException,
             InvalidAnswerException,
             UnknownWordIndexException,
-            NoSuchAlgorithmException {
+            NoSuchAlgorithmException,
+            HashNotTimestampedException {
         log.debug("Receiving request for generating a word pair: {}", request.toString());
         return WrappedResponseDTO.fromData(this.pairService.getOrCreatePair(request));
     }
@@ -105,7 +106,9 @@ public class WordPairController {
     ) throws
             NoAnswerForWordPairException,
             InvalidWordOrderException,
-            UnknownLanguageException {
+            UnknownLanguageException,
+            NoSuchAlgorithmException,
+            HashNotTimestampedException {
         log.info("Receiving request for getting an answer from a word pair: {}", request.toString());
         return WrappedResponseDTO.fromData(this.pairService.getAnswer(request));
     }

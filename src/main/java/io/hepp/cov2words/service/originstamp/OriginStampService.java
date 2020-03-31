@@ -63,6 +63,11 @@ public class OriginStampService {
         this.currencies = new HashSet<>(this.client.getConfiguration().getCurrencies());
     }
 
+    public Optional<AnswerTimestampMapping> getTimestampForAnswer(AnswerEntity answer) {
+        return this.answerTimestampRepository
+                .findFirstByDateInvalidatedIsNullAndAnswerEntity_Id(answer.getId());
+    }
+
     /**
      * Returns the proof for a certain hash.
      */

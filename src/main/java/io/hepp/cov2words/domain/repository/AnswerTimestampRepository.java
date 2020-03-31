@@ -4,6 +4,7 @@ import io.hepp.cov2words.domain.entity.AnswerTimestampMapping;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -11,5 +12,7 @@ import java.util.UUID;
  */
 @Repository
 public interface AnswerTimestampRepository extends JpaRepository<AnswerTimestampMapping, UUID> {
-
+    Optional<AnswerTimestampMapping> findFirstByDateInvalidatedIsNullAndAnswerEntity_Id(
+            UUID answerId
+    );
 }
