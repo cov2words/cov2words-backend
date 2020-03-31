@@ -38,6 +38,9 @@ public final class ErrorCodes {
         private static final int OFFSET = 2000;
         public static final int INVALID_ANSWER_RESULT = OFFSET + 1;
         public static final int NO_ANSWER_FOR_WORD_COMBINATION = OFFSET + 2;
+        public static final int INVALID_HASH = OFFSET + 3;
+        public static final int UNKNOWN_HASH = OFFSET + 4;
+        public static final int INVALID_HASH_STATUS = OFFSET + 5;
 
         /**
          * Private constructor to avoid accidental creation of an instance.

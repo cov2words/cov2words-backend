@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -159,7 +160,7 @@ public class PairService {
      * Get or creates a word pair for an answer.
      */
     public WordPairResponseDTO getOrCreatePair(WordPairRequestDTO request) throws
-            UnknownLanguageException, InvalidAnswerException, UnknownWordIndexException {
+            UnknownLanguageException, InvalidAnswerException, UnknownWordIndexException, NoSuchAlgorithmException {
         log.info("Get or create word pair for {}", request);
 
         this.languageService.validateLanguage(request.getLanguage());
@@ -188,7 +189,7 @@ public class PairService {
         }
     }
 
-    private List<AnswerWordMappingEntity> createWordPair(WordPairRequestDTO request) throws UnknownWordIndexException {
+    private List<AnswerWordMappingEntity> createWordPair(WordPairRequestDTO request) throws UnknownWordIndexException, NoSuchAlgorithmException {
         return this.indexService.getWordPairForIndex(
                 request.getLanguage(),
                 request.getAnswer()

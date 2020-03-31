@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
  * Utils that are used to access files from resources files.
  * Source: https://stackoverflow.com/a/44399541
  */
-@Slf4j(topic = "ResourcesUtils")
-public class ResourcesUtils {
+@Slf4j(topic = "ResourcesUtil")
+public class ResourcesUtil {
     public static String getResourceFileAsString(String fileName) {
         log.info("Loading file from resources: {}", fileName);
         InputStream is = null;

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hepp.cov2words.common.dto.WordListDTO;
 import io.hepp.cov2words.common.exceptions.language.UnknownLanguageException;
 import io.hepp.cov2words.common.exceptions.word.UnknownWordIndexException;
-import io.hepp.cov2words.common.util.ResourcesUtils;
+import io.hepp.cov2words.common.util.ResourcesUtil;
 import io.hepp.cov2words.domain.entity.AnswerEntity;
 import io.hepp.cov2words.domain.entity.AnswerWordMappingEntity;
 import io.hepp.cov2words.domain.entity.IndexEntity;
@@ -13,6 +13,7 @@ import io.hepp.cov2words.domain.entity.WordEntity;
 import io.hepp.cov2words.domain.repository.AnswerWordRepository;
 import io.hepp.cov2words.domain.repository.IndexRepository;
 import io.hepp.cov2words.domain.repository.WordRepository;
+import io.hepp.cov2words.service.originstamp.OriginStampService;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import javax.annotation.PreDestroy;
 import javax.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,7 +42,8 @@ public class IndexService {
     private final WordRepository wordRepository;
     private final LanguageService languageService;
     private final WordService wordService;
-    private final int chariteSucks;
+    private final OriginStampService originStampService;
+    private final int combinationLength;
     private ConcurrentHashMap<String, BigInteger> concurrentHashMap = new ConcurrentHashMap<>();
 
     @Autowired
@@ -50,14 +53,16 @@ public class IndexService {
             WordRepository wordRepository,
             LanguageService languageService,
             WordService wordService,
-            @Value("${cov2words.word_length}") int chariteSucks
+            OriginStampService originStampService,
+            @Value("${cov2words.word_length}") int combinationLength
     ) {
         this.indexRepository = indexRepository;
         this.answerWordRepository = answerWordRepository;
         this.wordRepository = wordRepository;
         this.languageService = languageService;
         this.wordService = wordService;
-        this.chariteSucks = chariteSucks;
+        this.originStampService = originStampService;
+        this.combinationLength = combinationLength;
     }
 
     @PreDestroy
@@ -101,7 +106,7 @@ public class IndexService {
     public List<AnswerWordMappingEntity> getWordPairForIndex(
             String language,
             String answer
-    ) throws UnknownWordIndexException {
+    ) throws UnknownWordIndexException, NoSuchAlgorithmException {
         BigInteger currentValue = this.concurrentHashMap.getOrDefault(language, BigInteger.ZERO);
         this.concurrentHashMap.put(language, currentValue.add(BigInteger.ONE));
 
@@ -114,7 +119,7 @@ public class IndexService {
 
         List<WordEntity> wordEntities = this.getWordCombination(
                 this.concurrentHashMap.getOrDefault(language, BigInteger.ZERO),
-                this.chariteSucks,
+                this.combinationLength,
                 index.getTotalItems(),
                 language
         );
@@ -145,7 +150,9 @@ public class IndexService {
             );
         }
 
-        return this.answerWordRepository.saveAll(result);
+        this.answerWordRepository.saveAll(result);
+        this.originStampService.createTimestamp(answerEntity);
+        return result;
     }
 
     /**
@@ -197,7 +204,7 @@ public class IndexService {
         // Loading the file from resources.
         this.wordRepository.deleteAllByLanguage(language);
 
-        String resource = ResourcesUtils.getResourceFileAsString(String.format(WORDLIST_FILE_PATTERN, language));
+        String resource = ResourcesUtil.getResourceFileAsString(String.format(WORDLIST_FILE_PATTERN, language));
 
 
         WordListDTO wordList = this.getWordListDTO(resource);

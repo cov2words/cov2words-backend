@@ -24,6 +24,7 @@ public final class Paths {
         public static final String GET_LANGUAGES = BASE_PATH + "/languages/get";
         public static final String GET_WORDS = BASE_PATH + "/get";
         public static final String COMBINATIONS = BASE_PATH + "/count";
+        public static final String GET_PROOF_FOR_ANSWER = BASE_PATH + "answers/proof/get";
 
         /**
          * Private constructor to avoid accidental creation of an instance.
