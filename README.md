@@ -47,3 +47,4 @@ We version our Java GitHub packages via git tags and use a semantic schema in th
 # Contributors
 
 - Thomas Hepp
+
