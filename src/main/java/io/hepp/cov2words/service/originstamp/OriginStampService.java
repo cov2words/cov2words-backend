@@ -95,7 +95,6 @@ public class OriginStampService {
         return timestamp.getCertificate();
     }
 
-    @Async
     public AnswerTimestampMapping createTimestamp(AnswerEntity answer) throws NoSuchAlgorithmException {
         // Calculating the hash.
         String sha256 = HashUtil.getSHA256(answer.getAnswer().getBytes());
