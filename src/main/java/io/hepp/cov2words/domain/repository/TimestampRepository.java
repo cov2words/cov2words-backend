@@ -17,9 +17,9 @@ import java.util.UUID;
  */
 @Repository
 public interface TimestampRepository extends JpaRepository<TimestampEntity, UUID> {
-    Page<TimestampEntity> findAllByDateInvalidatedIsNullAndStatusLessThanAndDateModifiedLessThan(
-            long status,
+    Page<TimestampEntity> findAllByDateInvalidatedIsNullAndAndDateModifiedLessThanAndStatusIn(
             DateTime dateModified,
+            long[] status,
             Pageable pageable
     );
 

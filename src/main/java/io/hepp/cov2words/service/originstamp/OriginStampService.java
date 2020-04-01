@@ -148,9 +148,9 @@ public class OriginStampService {
         DateTime maximumAge = DateTime.now().minusMinutes(5);
 
         do {
-            page = this.timestampRepository.findAllByDateInvalidatedIsNullAndStatusLessThanAndDateModifiedLessThan(
-                    TimestampStatus.PROCESSING.getStatusId(),
+            page = this.timestampRepository.findAllByDateInvalidatedIsNullAndAndDateModifiedLessThanAndStatusIn(
                     maximumAge,
+                    new long[]{TimestampStatus.UNSUBMITTED.getStatusId()},
                     pageRequest
             );
 
@@ -194,9 +194,13 @@ public class OriginStampService {
         DateTime maximumAge = DateTime.now().minusMinutes(5);
 
         do {
-            page = this.timestampRepository.findAllByDateInvalidatedIsNullAndStatusLessThanAndDateModifiedLessThan(
-                    TimestampStatus.FINISHED.getStatusId(),
+            page = this.timestampRepository.findAllByDateInvalidatedIsNullAndAndDateModifiedLessThanAndStatusIn(
                     maximumAge,
+                    new long[]{
+                            TimestampStatus.PROCESSING.getStatusId(),
+                            TimestampStatus.SUBMITTED.getStatusId(),
+                            TimestampStatus.TIMESTAMPED.getStatusId()
+                    },
                     pageRequest
             );
 
@@ -234,15 +238,15 @@ public class OriginStampService {
      */
     @Scheduled(cron = "${originstamp.cron.download_certificates}")
     public void fetchCertificates() {
-        log.info("Submitting timestamps to OriginStamp");
+        log.info("Downloading certificates from OriginStamp");
         Pageable pageRequest = PageRequest.of(0, this.pageSize);
         Page<TimestampEntity> page;
         DateTime maximumAge = DateTime.now().minusMinutes(5);
 
         do {
-            page = this.timestampRepository.findAllByDateInvalidatedIsNullAndStatusLessThanAndDateModifiedLessThan(
-                    TimestampStatus.PROCESSING.getStatusId(),
+            page = this.timestampRepository.findAllByDateInvalidatedIsNullAndAndDateModifiedLessThanAndStatusIn(
                     maximumAge,
+                    new long[]{TimestampStatus.FINISHED.getStatusId()},
                     pageRequest
             );
 
