@@ -38,7 +38,7 @@ public class TimestampEntity {
     @Column(name = "certificate")
     private byte[] certificate;
 
-    @Column(name = "currency_id")
+    @Column(name = "currency")
     private int currency;
 
     @Column(name = "status")
