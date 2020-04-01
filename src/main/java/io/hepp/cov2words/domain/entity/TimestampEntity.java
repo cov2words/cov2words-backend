@@ -41,7 +41,7 @@ public class TimestampEntity {
     @Column(name = "currency")
     private int currency;
 
-    @Column(name = "status")
+    @Column(name = "timestamp_status")
     private long status;
 
     @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
