@@ -101,7 +101,7 @@ public class PairService {
                 if (entities.size() <= 1) {
                     continue;
                 }
-                if (this.compareOrder(request.getWords(), entities)) {
+                if (this.compareWordPairOrder(request.getWords(), entities)) {
                     log.info("Found corresponding answer: {}", answer);
                     return new WordPairResponseDTO(
                             answer.getAnswer(),
@@ -143,7 +143,7 @@ public class PairService {
         }
     }
 
-    private boolean compareOrder(
+    private boolean compareWordPairOrder(
             List<WordPairResponseDTO.WordDTO> words,
             List<AnswerWordMappingEntity> mapping
     ) {
@@ -183,11 +183,23 @@ public class PairService {
         return mapping;
     }
 
-    private Optional<AnswerEntity> getAnswer(String input) throws InvalidAnswerException {
+    private Optional<AnswerWordMappingEntity> getAnswer(
+            String input,
+            String language
+    ) throws InvalidAnswerException {
         this.validateAnswer(input);
 
-        return this.answerRepository
-                .findFirstByAnswerAndDateInvalidatedIsNull(input);
+        List<AnswerWordMappingEntity> wordPairs = this.answerWordRepository
+                .findAllByWord_LanguageAndAnswerEntity_AnswerAndDateInvalidatedIsNullOrderByOrder(
+                        language,
+                        input
+                );
+
+        if (CollectionUtils.isEmpty(wordPairs)) {
+            return Optional.empty();
+        } else {
+            return Optional.ofNullable(wordPairs.get(wordPairs.size() - 1));
+        }
     }
 
     /**
@@ -203,13 +215,16 @@ public class PairService {
 
         this.languageService.validateLanguage(request.getLanguage());
 
-        Optional<AnswerEntity> answer = this.getAnswer(request.getAnswer());
+        Optional<AnswerWordMappingEntity> answer = this.getAnswer(
+                request.getAnswer(),
+                request.getLanguage()
+        );
 
         if (answer.isPresent()) {
             log.info("Answer already exists, returning result");
             return new WordPairResponseDTO(
                     request.getAnswer(),
-                    this.getAnswerDetail(answer.get(), 0),
+                    this.getAnswerDetail(answer.get().getAnswerEntity(), 0),
                     request.getLanguage(),
                     this.getWords(
                             this.answerWordRepository.findAllByWord_LanguageAndAnswerEntity_AnswerAndDateInvalidatedIsNullOrderByOrder(
