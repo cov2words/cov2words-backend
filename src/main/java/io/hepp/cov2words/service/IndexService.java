@@ -10,6 +10,7 @@ import io.hepp.cov2words.domain.entity.AnswerEntity;
 import io.hepp.cov2words.domain.entity.AnswerWordMappingEntity;
 import io.hepp.cov2words.domain.entity.IndexEntity;
 import io.hepp.cov2words.domain.entity.WordEntity;
+import io.hepp.cov2words.domain.repository.AnswerRepository;
 import io.hepp.cov2words.domain.repository.AnswerWordRepository;
 import io.hepp.cov2words.domain.repository.IndexRepository;
 import io.hepp.cov2words.domain.repository.WordRepository;
@@ -39,6 +40,7 @@ public class IndexService {
     private final static String WORDLIST_FILE_PATTERN = "wordlists/%s.json";
     private final IndexRepository indexRepository;
     private final AnswerWordRepository answerWordRepository;
+    private final AnswerRepository answerRepository;
     private final WordRepository wordRepository;
     private final LanguageService languageService;
     private final WordService wordService;
@@ -50,7 +52,7 @@ public class IndexService {
     public IndexService(
             IndexRepository indexRepository,
             AnswerWordRepository answerWordRepository,
-            WordRepository wordRepository,
+            AnswerRepository answerRepository, WordRepository wordRepository,
             LanguageService languageService,
             WordService wordService,
             OriginStampService originStampService,
@@ -58,6 +60,7 @@ public class IndexService {
     ) {
         this.indexRepository = indexRepository;
         this.answerWordRepository = answerWordRepository;
+        this.answerRepository = answerRepository;
         this.wordRepository = wordRepository;
         this.languageService = languageService;
         this.wordService = wordService;
@@ -126,14 +129,8 @@ public class IndexService {
 
         // Creating a new mapping.
         DateTime now = DateTime.now();
-        AnswerEntity answerEntity = new AnswerEntity(
-                UUID.randomUUID(),
-                now,
-                now,
-                null,
-                answer,
-                null
-        );
+
+        AnswerEntity answerEntity = this.getOrCreateAnswer(answer);
 
         List<AnswerWordMappingEntity> result = new ArrayList<>();
         for (int i = 0; i < wordEntities.size(); i++) {
@@ -153,6 +150,19 @@ public class IndexService {
         this.answerWordRepository.saveAll(result);
         this.originStampService.createTimestamp(answerEntity);
         return result;
+    }
+
+    private AnswerEntity getOrCreateAnswer(String answer) {
+        return this.answerRepository
+                .findFirstByAnswerAndDateInvalidatedIsNull(answer)
+                .orElse(new AnswerEntity(
+                        UUID.randomUUID(),
+                        DateTime.now(),
+                        DateTime.now(),
+                        null,
+                        answer,
+                        null
+                ));
     }
 
     /**
